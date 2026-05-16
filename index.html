@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 86 - Award Winning Multi-Page</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&display=swap" rel="stylesheet">
+
+    <!-- GSAP Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { background: '#000000', accent: '#ccff00' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body,
+        html {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            color: #fff;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* 1. TEXT REVEAL STRUCTURE */
+        .headline-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            pointer-events: none;
+        }
+
+        .mask {
+            display: block;
+            overflow: hidden;
+        }
+
+        .reveal-item {
+            display: block;
+            font-size: clamp(4rem, 15vw, 12rem);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: -0.06em;
+            line-height: 0.95;
+            transform: translateY(110%);
+            will-change: transform;
+        }
+
+        /* 2. 3D CAROUSEL STAGE */
+        #stage {
+            position: absolute;
+            inset: 0;
+            perspective: 1500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .neon-beam {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 400px;
+            background: #fff;
+            z-index: 1000;
+            box-shadow: 0 0 20px #ccff00, 0 0 40px #ccff00;
+            opacity: 0.6;
+        }
+
+        .slider-track {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            will-change: transform;
+            transform-style: preserve-3d;
+        }
+
+        .card {
+            position: absolute;
+            width: 300px;
+            height: 400px;
+            border-radius: 40px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            will-change: transform, opacity;
+            transform-style: preserve-3d;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+
+        /* 3. PREMIUM WATER CURSOR */
+        #cursor-glass {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: -40px 0 0 -40px;
+            mix-blend-mode: difference;
+        }
+
+        #cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 6px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 10000;
+            margin: -3px 0 0 -3px;
+            mix-blend-mode: difference;
+            pointer-events: none;
+        }
+
+        .noise-layer {
+            position: fixed;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 8000;
+        }
+
+        /* 4. MULTI-PAGE SECTIONS */
+        section {
+            height: 100vh;
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #about-name {
+            font-size: clamp(3rem, 12vw, 10rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .secondary-reveal {
+            transform: translateY(105%);
+            opacity: 0;
+            display: inline-block;
+        }
+
+        /* 5. 3D STONE ASSET STYLES */
+        .stone-container {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #blue-stone {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 50px rgba(0, 150, 255, 0.4));
+            will-change: transform;
+        }
+
+        .stone-aura {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 100, 255, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            z-index: -1;
+            animation: pulse-glow 4s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes float-stone {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            33% {
+                transform: translateY(-20px) rotate(2deg);
+            }
+
+            66% {
+                transform: translateY(10px) rotate(-1deg);
+            }
+        }
+
+        .stone-floating {
+            animation: float-stone 8s infinite ease-in-out;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="noise-layer"></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-glass"></div>
+
+    <!-- Section 1: Hero Carousel -->
+    <section id="hero">
+        <div class="headline-container">
+            <div class="mask"><span class="reveal-item">Tenure.</span></div>
+            <div class="mask"><span class="reveal-item">Practice.</span></div>
+            <div class="mask"><span class="reveal-item text-accent" style="color: #ccff00;">Craft.</span></div>
+        </div>
+        <div id="stage">
+            <div class="neon-beam"></div>
+            <div class="slider-track" id="track"></div>
+        </div>
+    </section>
+
+    <!-- Section 2: AGNI dev Reveal with 3D Stone -->
+    <section id="about" class="bg-[#020202]">
+        <!-- Cinematic 3D Stone -->
+        <div class="stone-container">
+            <div class="stone-aura"></div>
+            <img src="./3d blue stone asset.png" id="blue-stone" class="stone-floating" alt="3D Blue Stone">
+        </div>
+
+        <div class="text-center relative z-10">
+            <div class="overflow-hidden">
+                <h2 id="about-name">
+                    <span class="secondary-reveal">AGNI</span>
+                    <span class="secondary-reveal text-[#ccff00]">dev</span>
+                </h2>
+            </div>
+            <p id="about-subtext" class="text-white/30 uppercase tracking-[0.4em] text-xs mt-8 opacity-0">Creative
+                Developer & Interaction Engineer</p>
+        </div>
+    </section>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        const track = document.getElementById('track');
+        const glass = document.getElementById('cursor-glass');
+        const dot = document.getElementById('cursor-dot');
+        const stone = document.getElementById('blue-stone');
+
+        const cardImages = [
+            './assets/media__1776773071319.png',
+            './assets/media__1776772871741.png',
+            './assets/media__1776772904482.jpg',
+            './assets/media__1776772904527.jpg',
+            './assets/media__1776772962717.jpg'
+        ];
+
+        // --- 1. HERO REVEAL ---
+        function runHeroReveal() {
+            gsap.to('.reveal-item', {
+                y: "0%",
+                duration: 1.4,
+                ease: "expo.out",
+                stagger: 0.35,
+                delay: 0.5
+            });
+        }
+
+        // --- 2. ABOUT REVEAL & STONE PARALLAX ---
+        function initAboutReveal() {
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#about",
+                    start: "top 70%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+
+            tl.to('.secondary-reveal', {
+                y: "0%",
+                opacity: 1,
+                duration: 1.2,
+                stagger: 0.15,
+                ease: "power4.out"
+            })
+                .to('#about-subtext', {
+                    opacity: 1,
+                    y: -10,
+                    duration: 1,
+                    ease: "power2.out"
+                }, "-=0.6");
+
+            // Stone Parallax
+            gsap.to(stone, {
+                scrollTrigger: {
+                    trigger: "#about",
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: 1
+                },
+                y: -100,
+                rotate: 15
+            });
+        }
+
+        // --- 3. CURSOR PHYSICS & STONE INTERACTION ---
+        let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        let gPos = { x: mouse.x, y: mouse.y };
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            gsap.set(dot, { x: mouse.x, y: mouse.y });
+
+            // Subtle Stone Tilt
+            const stoneRect = stone.getBoundingClientRect();
+            const stoneCenterX = stoneRect.left + stoneRect.width / 2;
+            const stoneCenterY = stoneRect.top + stoneRect.height / 2;
+
+            const tiltX = (e.clientY - stoneCenterY) / 20;
+            const tiltY = (e.clientX - stoneCenterX) / 20;
+
+            gsap.to(stone, {
+                rotateX: -tiltX,
+                rotateY: tiltY,
+                duration: 1.5,
+                ease: "power2.out"
+            });
+        });
+
+        function animateCursor() {
+            const dx = (mouse.x - gPos.x);
+            const dy = (mouse.y - gPos.y);
+            gPos.x += dx * 0.15;
+            gPos.y += dy * 0.15;
+
+            const vel = Math.sqrt(dx * dx + dy * dy);
+            const stretch = Math.min(vel / 150, 0.4);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            gsap.set(glass, {
+                x: gPos.x,
+                y: gPos.y,
+                scaleX: 1 + stretch,
+                scaleY: 1 - stretch,
+                rotation: angle
+            });
+            requestAnimationFrame(animateCursor);
+        }
+
+        // --- 4. CAROUSEL PHYSICS ---
+        const CONFIG = { cardW: 300, gap: 20, speed: 1.5, scaleM: 1.5, rotM: 50 };
+        let scrollX = 0, cards = [], isDrag = false, startX = 0, dragX = 0;
+
+        function initCarousel() {
+            for (let i = 0; i < 15; i++) {
+                const c = document.createElement('div');
+                c.className = 'card';
+                c.innerHTML = `<img src="${cardImages[i % cardImages.length]}" />`;
+                track.appendChild(c);
+                cards.push(c);
+            }
+            scrollX = -7.5 * (CONFIG.cardW + CONFIG.gap);
+        }
+
+        function updateCarousel() {
+            if (!isDrag) scrollX -= CONFIG.speed;
+            const unit = CONFIG.cardW + CONFIG.gap;
+            const total = cards.length * unit;
+            if (scrollX < -total) scrollX += total;
+
+            const mid = window.innerWidth / 2;
+            cards.forEach((c, i) => {
+                let x = i * unit + scrollX;
+                if (x > window.innerWidth + unit) x -= total;
+                if (x < -unit * 2) x += total;
+
+                const off = x + CONFIG.cardW / 2 - mid;
+                const norm = Math.min(Math.abs(off) / (window.innerWidth / 1.2), 1);
+                const ease = 1 - Math.pow(norm, 0.8);
+
+                const s = 0.75 + ease * (CONFIG.scaleM - 0.75);
+                const r = (off / window.innerWidth) * CONFIG.rotM * 2;
+
+                c.style.transform = `translateX(${x}px) scale(${s}) rotateY(${-r}deg)`;
+                c.style.opacity = 0.4 + ease * 0.6;
+                c.style.filter = `brightness(${1 + ease * 1.5})`;
+                c.style.zIndex = Math.round(ease * 100);
+            });
+            requestAnimationFrame(updateCarousel);
+        }
+
+        window.addEventListener('mousedown', (e) => { isDrag = true; startX = e.pageX; dragX = scrollX; });
+        window.addEventListener('mousemove', (e) => { if (isDrag) scrollX = dragX + (e.pageX - startX) * 1.5; });
+        window.addEventListener('mouseup', () => isDrag = false);
+
+        // STARTUP
+        window.onload = () => {
+            initCarousel();
+            updateCarousel();
+            animateCursor();
+            runHeroReveal();
+            initAboutReveal();
+        };
+    </script>
+</body>
+
+</html>
